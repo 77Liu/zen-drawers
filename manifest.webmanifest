@@ -1,0 +1,12 @@
+{
+ "id":"/zen-drawers",
+ "name":"Zen 抽屉",
+ "short_name":"Zen 抽屉",
+ "description":"先安放，再从容安排。Zen 抽屉与 Zen QA。",
+ "start_url":"/",
+ "scope":"/",
+ "display":"standalone",
+ "background_color":"#f4f1e9",
+ "theme_color":"#f4f1e9",
+ "icons":[{"src":"/assets/zen-app-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"/assets/zen-app-512.png","sizes":"512x512","type":"image/png","purpose":"any"}]
+}

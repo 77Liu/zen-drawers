@@ -1,0 +1,9 @@
+{
+  "name": "easymde",
+  "version": "2.21.0",
+  "license": "MIT",
+  "repository": {
+    "url": "git+https://github.com/Ionaru/easy-markdown-editor.git",
+    "type": "git"
+  }
+}

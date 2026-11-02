@@ -1,0 +1,570 @@
+<!doctype html>
+<!--
+Zen 抽屉 — 本地中文定制版
+Adapted from Planning Zen: https://github.com/f3d0rov/planning-zen
+Retains its plant icon and simple card / drop-zone interaction; layout and storage adapted for customizable drawers.
+MIT License
+
+Copyright (c) 2024 Evan Fedorov
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="先收集，再安排。离线使用的中文需求优先级抽屉。">
+<title>Zen 抽屉</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#f4f1e9">
+<script src="assets/zen-store.js"></script>
+<script src="assets/zen-desktop.js"></script>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%20-960%20960%20960%22%3E%3Cstyle%3Epath%7Bfill%3A%2358654c%7D%40media%28prefers-color-scheme%3Adark%29%7Bpath%7Bfill%3A%23b6c19b%7D%7D%3C%2Fstyle%3E%3Cpath%20d%3D%22M342-160h276l40-160H302l40%20160Zm0%2080q-28%200-49-17t-28-44l-45-179h520l-45%20179q-7%2027-28%2044t-49%2017H342ZM200-400h560v-80H200v80Zm280-240q0-100%2070-170t170-70q0%2090-57%20156t-143%2080v84h320v160q0%2033-23.5%2056.5T760-320H200q-33%200-56.5-23.5T120-400v-160h320v-84q-86-14-143-80t-57-156q100%200%20170%2070t70%20170Z%22%2F%3E%3C%2Fsvg%3E">
+<link rel="stylesheet" href="assets/vendor/easymde.min.css">
+<style>
+
+:root {
+ color-scheme:light;
+ --bg:#f4f1e9; --text:#353d34; --muted:#85877a; --line:#dadbce;
+ --white:#faf8f2; --panel:#efeee5; --card:#fbfaf5; --card-hover:#e9edde;
+ --green:#58654c; --soft:#e9ecdf; --overlay:#33382d45; --shadow:0 18px 70px #373d291c;
+ --serif:"Songti SC","STSong","Noto Serif CJK SC",serif;
+ --ease:cubic-bezier(.22,.61,.36,1);
+}
+* {box-sizing:border-box}
+html,body {height:100%;margin:0}
+body {
+ color:var(--text);background:var(--bg);
+ background-image:radial-gradient(ellipse at 68% 0%,#fffdf77a,transparent 60%);
+ font:calc(13px * var(--font-scale,1))/1.7 var(--ui-font,-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif);
+ -webkit-font-smoothing:antialiased;
+}
+body.dark {
+ color-scheme:dark;
+ --bg:#22271f; --text:#deded0; --muted:#959c88; --line:#3d4537;
+ --white:#2b3126; --panel:#293023; --card:#30382a; --card-hover:#3d4733;
+ --green:#b6c19b; --soft:#353e2c; --overlay:#11160f88; --shadow:0 18px 70px #0004;
+ background-image:radial-gradient(ellipse at 68% 0%,#45513a24,transparent 60%);
+}
+button,input,textarea,select {font:inherit;color:inherit}
+button {cursor:pointer;background:transparent;border:1px solid var(--line);border-radius:3px;padding:7px 13px;line-height:1.5;transition:background .2s,border-color .2s,color .2s}
+button:hover {background:var(--soft);border-color:var(--green)}
+button:disabled {opacity:.3;cursor:default}
+button.primary {background:var(--green);border-color:var(--green);color:var(--bg)}
+button.primary:hover {filter:brightness(1.08)}
+button.danger {color:#9b6755}
+input,textarea,select {border:1px solid var(--line);border-radius:3px;padding:9px 11px;background:var(--white);min-width:0}
+textarea {resize:vertical;line-height:1.9}
+::placeholder {color:var(--muted);opacity:.75}
+:focus-visible {outline:1px solid var(--green);outline-offset:4px}
+h1,h2,p {margin:0}
+h1,h2 {font-family:var(--serif);font-weight:500}
+h1 {font-size:calc(30px * var(--font-scale,1));line-height:1.4;letter-spacing:.08em}
+h2 {font-size:calc(19px * var(--font-scale,1));letter-spacing:.05em}
+.muted {color:var(--muted)}
+.tiny {font-size:calc(11px * var(--font-scale,1))}
+.app {height:100dvh;max-width:1560px;width:100%;margin:auto;padding:34px 54px 18px;display:flex;flex-direction:column;overflow:hidden}
+header {display:flex;align-items:center;justify-content:space-between;gap:20px;flex-shrink:0;padding-bottom:21px;margin-bottom:25px;border-bottom:1px solid var(--line)}
+.brand {display:flex;align-items:center;gap:17px}
+.brand svg {width:29px;height:35px;fill:var(--green);opacity:.8}
+.subtitle {font-size:calc(11px * var(--font-scale,1));letter-spacing:.12em;color:var(--muted);margin-top:5px}
+.toolbar {display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+.toolbar button {font-size:calc(11px * var(--font-scale,1));letter-spacing:.03em;padding:5px 10px;border-color:transparent;color:var(--muted);border-radius:2px}
+.toolbar button:hover {color:var(--text);border-color:var(--line)}
+#undo {font-size:calc(15px * var(--font-scale,1));padding:1px 9px;line-height:26px}
+#completed {margin-right:9px;border-right:1px solid var(--line);border-radius:0;padding-right:19px}
+#done-count {margin-left:5px;font-variant-numeric:tabular-nums}
+#theme {font-size:calc(17px * var(--font-scale,1));line-height:22px;margin-left:4px;padding:3px 8px}
+.layout {display:grid;grid-template-columns:252px minmax(0,1fr);gap:40px;flex:1;min-height:0;align-items:stretch;overflow:hidden}
+.candidate {display:flex;flex-direction:column;min-height:0;padding-right:29px;border-right:1px solid var(--line)}
+.candidate-head {padding:0 0 19px;flex-shrink:0}
+.section-label {display:flex;align-items:center;justify-content:space-between;gap:10px}
+.section-label h2 {font-size:calc(20px * var(--font-scale,1))}
+.candidate-head .muted {margin-top:7px!important;font-size:calc(11px * var(--font-scale,1));letter-spacing:.02em}
+.count {font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;font-size:calc(11px * var(--font-scale,1));font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:0}
+.capture {padding:0 0 23px;flex-shrink:0}
+.capture textarea {display:block;width:100%;height:128px;min-height:64px;max-height:23vh;padding:12px 10px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:color-mix(in srgb,var(--white) 60%,transparent);font-size:calc(12px * var(--font-scale,1));line-height:2}
+.capture textarea:focus {outline:0;border-bottom-color:var(--green);background:var(--white)}
+.capture-bottom {display:flex;justify-content:space-between;align-items:center;gap:5px;margin-top:12px}
+.capture-bottom .tiny {font-size:calc(9px * var(--font-scale,1));letter-spacing:-.02em}
+.capture button {font-size:calc(11px * var(--font-scale,1));padding:6px 10px}
+.candidate-zone {flex:1;min-height:0;padding:20px 0 0;border-top:1px solid var(--line);overflow:auto;scrollbar-gutter:stable}
+.zone-content {display:flex;flex-wrap:wrap;gap:10px;align-content:flex-start;align-items:flex-start;min-height:36px}
+.candidate-zone .zone-content {flex-direction:column;flex-wrap:nowrap;align-items:flex-start;gap:11px}
+.candidate-zone .task {width:fit-content}
+.layout>section {display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.board-head {display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-shrink:0;margin:0 0 14px}
+.board-head h2 {font-size:calc(20px * var(--font-scale,1))}
+.board-head .tiny {font-size:calc(10px * var(--font-scale,1));letter-spacing:.07em}
+#active-count {font-size:calc(10px * var(--font-scale,1));margin-left:8px}
+.drawers {display:grid;grid-template-rows:repeat(var(--drawer-count,5),minmax(54px,1fr));gap:0;flex:1;min-height:0;overflow:auto}
+.drawer {
+ display:grid;grid-template-columns:108px minmax(0,1fr);min-height:0;overflow:hidden;
+ border:0;border-bottom:1px solid var(--line);border-radius:0;
+ background:linear-gradient(90deg,color-mix(in srgb,var(--drawer-color) var(--priority-tint,3%),var(--bg)),transparent 95%);
+ transition:box-shadow .18s ease;
+}
+.drawer:first-child {border-top:1px solid var(--line)}
+.drawer-label {position:relative;display:flex;flex-direction:column;justify-content:center;padding:10px 14px 10px 17px;overflow:hidden}
+.drawer-label::before {content:"";position:absolute;left:0;top:calc(50% - 17px);height:34px;width:var(--priority-stripe,1px);background:var(--drawer-color);opacity:var(--priority-count-opacity,.7)}
+.drawer-name {font-family:var(--serif);font-size:var(--priority-font,20px);font-weight:var(--priority-weight,400);line-height:1.4;letter-spacing:.04em;overflow-wrap:anywhere;color:color-mix(in srgb,var(--drawer-color) var(--priority-ink,20%),var(--text))}
+.drawer-count {font-size:calc(10px * var(--font-scale,1));color:var(--muted);margin-top:5px;font-variant-numeric:tabular-nums;opacity:var(--priority-count-opacity,.75)}
+.drawer .zone-content {min-height:0;height:100%;padding:15px 12px 15px 17px;overflow:auto;scrollbar-gutter:stable}
+.empty {font-size:calc(11px * var(--font-scale,1));color:var(--muted);align-self:center;pointer-events:none;padding:6px 0}
+.drawer .empty {opacity:0;transition:opacity .25s ease}
+.drawer:hover .empty,.drawer.over .empty {opacity:.65}
+.candidate-zone .empty {text-align:center;width:100%;font-family:var(--serif);font-size:calc(13px * var(--font-scale,1));letter-spacing:.04em;line-height:2;padding:30px 0;opacity:.75}
+.candidate-zone .empty::before {content:"";display:block;width:33px;height:33px;border:1px solid color-mix(in srgb,var(--green) 35%,transparent);border-right-color:transparent;border-radius:50%;transform:rotate(-20deg);margin:3px auto 17px}
+.task {position:relative;isolation:isolate;display:flex;align-items:center;gap:7px;max-width:100%;padding:7px 10px;border-radius:3px;background:transparent;border:1px solid transparent;font-size:calc(13px * var(--font-scale,1));line-height:1.75;cursor:grab;user-select:none;overflow-wrap:anywhere}
+.task::before {content:"";position:absolute;left:0;top:0;width:100%;height:100%;border-radius:inherit;background:var(--card);border:1px solid color-mix(in srgb,var(--line) 65%,transparent);z-index:-1;pointer-events:none;transition:background .25s,border-color .25s}
+.task:hover::before,.task.expanded::before {background:var(--card-hover);border-color:color-mix(in srgb,var(--green) 35%,var(--line))}
+.task-text {white-space:pre-wrap;min-width:0}
+.task-text a {color:inherit;text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--green) 45%,transparent);text-underline-offset:4px;cursor:pointer}
+.grip {opacity:.17;flex-shrink:0;font-size:calc(13px * var(--font-scale,1));transition:opacity .2s}
+.task:hover .grip {opacity:.45}
+.task.is-urgent {padding-right:39px}
+.task.expanded {padding-right:65px}
+.task-complete {position:absolute;right:5px;top:50%;width:25px;height:25px;padding:0;border:0;border-radius:50%;display:grid;place-items:center;background:transparent;color:var(--green);font-size:calc(17px * var(--font-scale,1));line-height:1;opacity:0;transform:translate(-45px,-50%);pointer-events:none;transition:opacity .25s ease .08s,transform .4s var(--ease),background .2s}
+.task.expanded .task-complete {opacity:1;transform:translate(0,-50%);pointer-events:auto}
+.task-complete:hover {background:color-mix(in srgb,var(--green) 12%,transparent)}
+
+.task-urgent {position:absolute;right:31px;top:50%;width:25px;height:25px;padding:0;border:0;border-radius:50%;display:grid;place-items:center;background:transparent;color:#b95c49;line-height:1;opacity:0;transform:translate(-19px,-50%);pointer-events:none;transition:opacity .25s ease .08s,transform .4s var(--ease),background .2s}
+.task-urgent svg {width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.task.expanded .task-urgent {opacity:1;transform:translate(0,-50%);pointer-events:auto}
+.task.is-urgent .task-urgent {right:5px;opacity:1;transform:translate(0,-50%);pointer-events:auto}
+.task.is-urgent.expanded .task-urgent {right:31px}
+.task.is-urgent:not(.expanded) .task-complete {transform:translate(-19px,-50%)}
+.task-urgent:hover {background:#b95c4914}
+body.dark .task-urgent {color:#df8a72}
+.completion-piece:not(.is-urgent) .task-urgent {visibility:hidden}
+
+.task.completing {visibility:hidden;pointer-events:none}
+.task.dragging {opacity:.35}
+.completion-piece {position:fixed;margin:0;z-index:100;pointer-events:none;visibility:visible;box-shadow:none;overflow:hidden;transform-origin:center}
+.completion-piece .task-complete {visibility:hidden}
+.dropzone.over {box-shadow:inset 0 0 0 1px var(--green);background-color:var(--soft)}
+.task.before {box-shadow:-2px 0 0 var(--green)}
+.task.after {box-shadow:2px 0 0 var(--green)}
+.candidate-zone .task.before {box-shadow:0 -2px 0 var(--green)}
+.candidate-zone .task.after {box-shadow:0 2px 0 var(--green)}
+.bottom-drops {align-self:flex-end;width:150px;display:flex;flex-shrink:0;margin-top:7px;min-height:21px;visibility:hidden;opacity:0;transition:opacity .2s}
+.is-dragging .bottom-drops {visibility:visible;opacity:1}
+.utility-zone {flex:1;text-align:center;border:1px dashed var(--line);border-radius:2px;padding:3px 6px;min-height:23px;font-size:calc(10px * var(--font-scale,1));color:var(--muted)}
+.utility-zone.over {color:#a36f55;box-shadow:inset 0 0 0 1px #a36f55;background:var(--white)}
+.help {display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;flex-shrink:0;margin-top:4px;font-size:calc(10px * var(--font-scale,1));letter-spacing:.025em;color:var(--muted)}
+#save-status {font-size:calc(10px * var(--font-scale,1))}
+footer {display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;margin-top:17px;padding-top:11px;border-top:1px solid var(--line);font-size:calc(9px * var(--font-scale,1));letter-spacing:.04em;color:var(--muted)}
+footer a {color:inherit;text-decoration:none}
+footer a:hover {color:var(--text)}
+#storage-warning {display:none;margin-bottom:12px;padding:9px 13px;border:1px solid #c5ae7d;background:#eee3c6;color:#735e37;font-size:calc(12px * var(--font-scale,1))}
+dialog {width:560px;max-width:min(620px,calc(100vw - 30px));max-height:85vh;padding:0;border:1px solid var(--line);border-radius:5px;background:var(--white);color:var(--text);box-shadow:var(--shadow)}
+dialog::backdrop {background:var(--overlay);backdrop-filter:blur(5px)}
+.dialog-head {display:flex;align-items:center;justify-content:space-between;padding:22px 25px 16px;border-bottom:1px solid var(--line)}
+.dialog-head h2 {font-size:calc(22px * var(--font-scale,1))}
+.close {padding:0 5px;border:0;background:transparent;color:var(--muted);font-size:calc(23px * var(--font-scale,1))}
+.dialog-body {max-height:57vh;overflow:auto;padding:22px 25px}
+.dialog-foot {display:flex;align-items:center;justify-content:flex-end;gap:9px;padding:15px 25px;border-top:1px solid var(--line)}
+.dialog-foot .spacer {flex:1}
+.field {display:flex;flex-direction:column;gap:7px;margin-bottom:17px}
+.field:last-child {margin-bottom:0}
+.field>span {font-size:calc(11px * var(--font-scale,1));color:var(--muted)}
+#task-text {width:100%;min-height:105px}
+#drawer-editor {display:flex;flex-direction:column;gap:9px;margin:16px 0}
+.drawer-edit-row {display:grid;grid-template-columns:28px 1fr 28px 28px 28px;gap:7px;align-items:center}
+.drawer-edit-row input[type=color] {width:28px;height:30px;padding:2px;border:0;background:none}
+.drawer-edit-row input[type=text] {width:100%;padding:7px 9px}
+.drawer-edit-row button {padding:3px 0;font-size:calc(13px * var(--font-scale,1))}
+.completed-row {display:flex;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line)}
+.completed-info {flex:1;overflow-wrap:anywhere;min-width:0}
+.completed-info .name {white-space:pre-wrap}
+.completed-info .name a {color:var(--green);text-underline-offset:3px}
+.completed-row button {font-size:calc(11px * var(--font-scale,1));flex-shrink:0}
+.error {color:#a36850;font-size:calc(11px * var(--font-scale,1));margin-top:7px}
+.import-summary {white-space:pre-line;margin-top:14px}
+.toast {position:fixed;bottom:28px;left:50%;transform:translate(-50%,10px);max-width:90vw;padding:10px 20px;border:1px solid var(--line);border-radius:3px;background:var(--text);color:var(--bg);font-size:calc(12px * var(--font-scale,1));opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:110}
+.toast.show {opacity:1;transform:translate(-50%,0)}
+.task-attachment {display:inline-flex;align-items:center;gap:3px;flex:none;padding:1px 2px;border:0;background:transparent;color:var(--green);font-size:calc(9px * var(--font-scale,1));line-height:1.2}
+.task-attachment svg {width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.task-attachment:hover {background:var(--soft)}
+.attachment-section {border-top:1px solid var(--line);margin-top:18px;padding-top:16px}
+.attachment-heading {display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:calc(12px * var(--font-scale,1))}
+.attachment-heading button {font-size:calc(11px * var(--font-scale,1));padding:5px 9px}
+.attachment-row {display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:calc(12px * var(--font-scale,1))}
+.attachment-row a {color:var(--green);overflow-wrap:anywhere;text-underline-offset:3px}
+.attachment-info {flex:1;min-width:0}
+.attachment-info small {display:block;color:var(--muted);font-size:calc(10px * var(--font-scale,1));overflow-wrap:anywhere}
+.attachment-remove {border:0;padding:1px 6px;background:transparent;color:var(--muted);font-size:calc(18px * var(--font-scale,1))}
+.link-entry {display:grid;grid-template-columns:1fr auto;gap:7px;margin-top:12px}
+.link-entry input {width:100%;font-size:calc(12px * var(--font-scale,1));padding:7px 9px}
+.link-entry button {font-size:calc(11px * var(--font-scale,1));padding:5px 10px}
+#link-name {grid-column:1/-1}
+.attachment-hint {margin-top:9px;line-height:1.8}
+* {scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+@media(min-width:601px) {html,body {overflow:hidden}}
+@media(max-width:1100px) and (min-width:601px) {
+ .app {padding:28px 30px 16px}.layout {grid-template-columns:226px minmax(0,1fr);gap:26px}.candidate {padding-right:22px}
+ .brand {gap:12px}.toolbar {gap:0}.toolbar button {padding:5px 7px}.drawer {grid-template-columns:90px minmax(0,1fr)}
+ .drawer .zone-content {padding-left:12px}
+}
+@media(max-height:760px) and (min-width:601px) {
+ .app {padding-top:20px;padding-bottom:13px}header {padding-bottom:14px;margin-bottom:18px}h1 {font-size:calc(26px * var(--font-scale,1))}
+ .brand svg {width:25px;height:30px}.subtitle {margin-top:2px}.candidate-head {padding-bottom:13px}
+ .capture {padding-bottom:16px}.capture textarea {height:100px;font-size:calc(11px * var(--font-scale,1));line-height:1.8}.capture-bottom {margin-top:9px}
+ .board-head {margin-bottom:10px}.drawer .zone-content {padding-top:10px;padding-bottom:10px}
+ .drawer-label::before {height:27px;top:calc(50% - 13px)}footer {margin-top:11px;padding-top:8px}
+}
+@media(max-width:800px) and (min-width:601px) {
+ .app {padding-left:22px;padding-right:22px}.layout {grid-template-columns:200px minmax(0,1fr);gap:20px}
+ .candidate {padding-right:18px}.toolbar {max-width:310px;justify-content:flex-end}.board-head .tiny {display:none}
+ .capture-bottom {flex-wrap:wrap;justify-content:flex-end}.capture-bottom .tiny {width:100%}
+ .drawer {grid-template-columns:74px minmax(0,1fr)}.drawer-label {padding-left:11px}.drawer .zone-content {padding-left:8px;padding-right:6px}
+}
+@media(max-width:600px) {
+ html,body {height:auto;overflow:auto}.app {height:auto;overflow:visible;padding:24px 20px 16px}
+ header {align-items:flex-start;flex-direction:column;gap:18px;padding-bottom:17px;margin-bottom:24px}h1 {font-size:calc(28px * var(--font-scale,1))}
+ .toolbar {gap:1px}.toolbar button {padding-left:6px;padding-right:6px}#completed {padding-right:12px;margin-right:4px}
+ .layout {display:block;overflow:visible}.candidate {padding:0;border-right:0;margin-bottom:30px}
+ .capture textarea {height:110px;max-height:none}.candidate-zone {min-height:95px;max-height:260px;padding-top:14px}
+ .candidate-zone .zone-content {flex-direction:row;flex-wrap:wrap}.candidate-zone .empty {padding:13px 0}
+ .candidate-zone .empty::before {display:none}.board-head .tiny {font-size:calc(9px * var(--font-scale,1))}.board-head h2 {font-size:calc(19px * var(--font-scale,1))}
+ .drawers {grid-template-rows:repeat(var(--drawer-count,5),minmax(95px,auto));overflow:visible}
+ .drawer {grid-template-columns:77px minmax(0,1fr)}.drawer-name {font-size:calc(19px * var(--font-scale,1))}.drawer .zone-content {padding:14px 8px;min-height:95px;max-height:240px}
+ .drawer-label {padding-left:12px}.bottom-drops {visibility:visible;opacity:.6}.help {font-size:calc(9px * var(--font-scale,1))}footer {font-size:calc(8px * var(--font-scale,1));align-items:flex-start}
+}
+@media(hover:none) {.task,.task.is-urgent {padding-right:65px}.task .task-complete,.task .task-urgent {opacity:1;transform:translate(0,-50%);pointer-events:auto}.task.is-urgent .task-urgent {right:31px}}
+@media(prefers-reduced-motion:reduce) {* {transition:none!important;scroll-behavior:auto!important}}
+
+
+/* Compact task editor, with notes immediately above the existing attachment block. */
+#task-dialog{max-height:90dvh}
+#task-dialog .dialog-head{padding:15px 20px 12px}
+#task-dialog .dialog-head h2{font-size:calc(20px * var(--font-scale,1))}
+#task-dialog .dialog-body{padding:15px 20px;max-height:calc(90dvh - 116px)}
+#task-dialog .field{gap:5px;margin-bottom:12px}
+#task-dialog input,#task-dialog select{padding:7px 9px;font-size:calc(12px * var(--font-scale,1))}
+#task-dialog #task-text{height:40px;min-height:40px;max-height:96px;resize:none;padding:8px 10px;line-height:1.7;font-size:calc(13px * var(--font-scale,1))}
+.task-metadata{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#task-dialog .task-metadata .field{min-width:0;margin-bottom:12px}
+#task-notes{width:100%;height:96px;min-height:80px;padding:9px 10px;font-size:calc(12px * var(--font-scale,1));line-height:1.9;resize:vertical}
+#task-dialog .attachment-section{margin-top:13px;padding-top:12px}
+#task-dialog .attachment-heading{margin-bottom:7px}
+#task-dialog .link-entry{margin-top:9px}
+#task-dialog .attachment-hint{margin-top:7px}
+#task-dialog .dialog-foot{padding:11px 20px;gap:8px}
+#task-dialog .dialog-foot button{font-size:calc(12px * var(--font-scale,1));padding:6px 11px}
+.completed-notes{margin-top:9px;padding-left:10px;border-left:1px solid var(--line);font-size:calc(12px * var(--font-scale,1))}
+.completed-notes-text{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:3px}
+.completed-notes-text a{color:var(--green);text-underline-offset:3px}
+@media(max-width:600px){#task-dialog .dialog-head,#task-dialog .dialog-body,#task-dialog .dialog-foot{padding-left:16px;padding-right:16px}.task-metadata{gap:10px}#task-dialog .dialog-foot{gap:6px}#task-dialog .dialog-foot button{padding-left:9px;padding-right:9px}}
+
+</style>
+<link rel="stylesheet" href="assets/zen-qa.css">
+</head>
+<body>
+<div class="app">
+<header>
+ <div class="brand"><svg aria-hidden="true" viewBox="0 -960 960 960"><path d="M342-160h276l40-160H302l40 160Zm0 80q-28 0-49-17t-28-44l-45-179h520l-45 179q-7 27-28 44t-49 17H342ZM200-400h560v-80H200v80Zm280-240q0-100 70-170t170-70q0 90-57 156t-143 80v84h320v160q0 33-23.5 56.5T760-320H200q-33 0-56.5-23.5T120-400v-160h320v-84q-86-14-143-80t-57-156q100 0 170 70t70 170Z"/></svg><div><h1>Zen 抽屉</h1><p class="subtitle">先安放，再从容安排。</p></div></div>
+ <nav class="toolbar" aria-label="工具栏">
+ <button id="undo" disabled title="撤销（⌘ / Ctrl + Z）" aria-label="撤销">↶</button><button id="settings">自定义抽屉</button><button id="completed">已完成 <span id="done-count">0</span></button><button id="export">导出</button><button id="import">导入</button><button id="theme" title="切换深浅色" aria-label="切换深浅色">◐</button>
+ </nav>
+</header>
+<div id="storage-warning" role="alert"></div>
+<main class="layout">
+ <aside class="candidate">
+  <div class="candidate-head"><div class="section-label"><h2>候选 · 未分配</h2><span class="count" id="inbox-count">0 项</span></div><p class="muted tiny" style="margin-top:5px">先记下来，稍后安排。</p></div>
+  <form class="capture" id="capture"><label class="topic-create" id="capture-topic-field"><span>新增归入</span><select id="capture-topic" aria-label="候选课题"><option value="work">工作</option><option value="study">学习</option><option value="life">生活</option></select></label><textarea id="capture-text" aria-label="批量添加候选，每行一项" placeholder="输入或粘贴需求，每行一项&#10;修复登录失败&#10;优化搜索体验&#10;补充接口文档"></textarea><div class="capture-bottom"><span class="muted tiny">⌘ / Ctrl + Enter 添加</span><button class="primary" type="submit">＋ 添加候选</button></div></form>
+  <section id="inbox" class="candidate-zone dropzone" data-zone="inbox" aria-label="未分配候选"><div class="zone-content"></div></section>
+ </aside>
+ <section aria-label="优先级抽屉">
+  <div class="board-head"><h2>轻重有序 <span class="count" id="active-count"></span></h2><nav class="topic-tabs" id="drawer-topics" aria-label="抽屉课题"></nav></div>
+  <div id="drawers" class="drawers"></div>
+  <div class="bottom-drops"><div class="utility-zone dropzone" data-zone="trash" aria-label="拖到这里删除">× 拖到这里，删除</div></div>
+  <div class="help"><span>悬停完成 · 双击编辑 · 拖动排序</span><span id="save-status" role="status">已在本机保存</span></div>
+ </section>
+</main>
+<footer><span>本机保存 · 同一浏览器打开 · 定期导出备份</span><span><a href="https://github.com/f3d0rov/planning-zen" target="_blank" rel="noopener">Planning Zen</a> · MIT</span></footer>
+</div>
+<dialog id="task-dialog" aria-labelledby="task-dialog-title"><form id="task-form"><div class="dialog-head"><h2 id="task-dialog-title">编辑需求</h2><button type="button" class="close" data-close aria-label="关闭">×</button></div><div class="dialog-body"><label class="field"><span>需求内容</span><textarea id="task-text" rows="1" required></textarea></label><div class="task-metadata"><label class="field"><span>课题</span><select id="task-topic"><option value="work">工作</option><option value="study">学习</option><option value="life">生活</option></select></label><label class="field"><span>放入抽屉</span><select id="task-zone"></select></label></div><label class="field task-notes-field"><span>记录</span><textarea id="task-notes" rows="4" placeholder="记下进展、想法或下一步…"></textarea></label><section class="attachment-section" aria-label="附件与链接"><div class="attachment-heading"><span>附件与链接</span><button type="button" id="choose-files">＋ 添加文件</button></div><input type="file" id="task-files" multiple hidden><div id="task-attachments" tabindex="-1"></div><div class="link-entry"><input id="link-name" aria-label="链接名称" placeholder="链接名称（可选）"><input id="link-url" aria-label="链接地址" placeholder="https://…" inputmode="url"><button type="button" id="add-link">添加链接</button></div><p id="attachment-error" class="error" role="alert"></p><p class="tiny muted attachment-hint">文件保存在当前浏览器，随导出备份一同保存。需求文字中的网址也可以直接点击。</p></section></div><div class="dialog-foot"><button type="button" class="danger" id="delete-task">删除</button><button type="button" id="finish-task">✓ 完成</button><span class="spacer"></span><button type="button" data-close>取消</button><button type="submit" class="primary">保存</button></div></form></dialog>
+<dialog id="settings-dialog" aria-labelledby="settings-title"><form id="settings-form"><div class="dialog-head"><h2 id="settings-title">自定义抽屉</h2><button type="button" class="close" data-close aria-label="关闭">×</button></div><div class="dialog-body"><p class="muted tiny">改名字、颜色和顺序，让抽屉适合你的工作方式。</p><div id="drawer-editor"></div><button type="button" id="add-drawer">＋ 添加抽屉</button><p class="muted tiny" style="margin-top:13px">移除抽屉后，其中的需求会回到「候选 · 未分配」。</p><p id="settings-error" class="error" role="alert"></p></div><div class="dialog-foot"><button type="button" data-close>取消</button><button type="submit" class="primary">保存设置</button></div></form></dialog>
+<dialog id="completed-dialog" aria-labelledby="completed-title"><div class="dialog-head"><h2 id="completed-title">已完成</h2><button type="button" class="close" data-close aria-label="关闭">×</button></div><div class="dialog-body" id="completed-list"></div><div class="dialog-foot"><span class="muted tiny" style="margin-right:auto">恢复后会回到未分配候选。</span><button data-close>关闭</button></div></dialog>
+<dialog id="import-dialog" aria-labelledby="import-title"><div class="dialog-head"><h2 id="import-title">导入备份</h2><button type="button" class="close" data-close aria-label="关闭">×</button></div><div class="dialog-body"><p>导入会替换全部课题的抽屉和需求，可以通过「撤销」恢复。</p><p id="import-summary" class="import-summary muted"></p></div><div class="dialog-foot"><button data-close>取消</button><button class="primary" id="confirm-import">导入并替换</button></div></dialog>
+<input type="file" id="import-file" accept=".json,application/json" hidden>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script src="assets/vendor/easymde.min.js"></script>
+<script src="assets/vendor/purify.min.js"></script>
+<script src="assets/zen-cards.js"></script>
+<script src="assets/zen-time.js"></script>
+<script src="assets/zen-markdown.js"></script>
+<script src="assets/zen-task-record.js"></script>
+<script src="assets/zen-qa.js"></script>
+<script src="assets/zen-task-tags.js"></script>
+<script src="assets/zen-appearance.js"></script>
+<script>
+'use strict';
+(async()=>{
+await window.ZenDesktopReady;
+if(window.ZenStore){document.querySelector('footer span').textContent='数据保存在 ~/.zen · 定期导出备份';document.querySelector('.attachment-hint').textContent='文件单独保存在 ~/.zen/files，导出备份会包含附件。';}
+const KEY='zen-drawers-v1', DRAFT_KEY='zen-drawers-draft-v1';
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const uid=()=>typeof crypto.randomUUID==='function'?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2);
+const copy=x=>JSON.parse(JSON.stringify(x));
+const TOPIC_KEY='zen-topic-v1',CREATE_TOPIC_KEY='zen-topic-create-v1';
+const topicNames={work:'工作',study:'学习',life:'生活'};
+const normalizeTopic=t=>Object.hasOwn(topicNames,t)?t:'work';
+let topic='all',creationTopic='work';
+try{const saved=localStorage.getItem(TOPIC_KEY);if(saved==='all'||Object.hasOwn(topicNames,saved))topic=saved;creationTopic=normalizeTopic(localStorage.getItem(CREATE_TOPIC_KEY))}catch(e){}
+const topics={current:()=>topic,defaultTopic:()=>topic==='all'?creationTopic:topic,normalize:normalizeTopic,matches:t=>topic==='all'||normalizeTopic(t.topic)===topic,names:topicNames};
+function captureDraftKey(){return topic==='work'?DRAFT_KEY:DRAFT_KEY+'-'+topic}
+function drawTopicTabs(container){container.replaceChildren();[['all','全选'],...Object.entries(topicNames)].forEach(([id,name])=>{const button=make('button',null,name);button.type='button';button.dataset.topic=id;button.setAttribute('aria-pressed',String(id===topic));button.onclick=()=>switchTopic(id);container.append(button)})}
+topics.drawTabs=drawTopicTabs;
+function updateCreationTopic(value){creationTopic=normalizeTopic(value);try{localStorage.setItem(CREATE_TOPIC_KEY,creationTopic)}catch(e){storageError()}window.dispatchEvent(new Event('zen-creation-topic-change'))}
+topics.setDefault=updateCreationTopic;
+window.addEventListener('zen-creation-topic-change',()=>$('#capture-topic').value=topics.defaultTopic());
+function switchTopic(next,remember=true){if(next===topic)return;try{localStorage.setItem(captureDraftKey(),$('#capture-text').value)}catch(e){storageError()}const previous=topic;topic=next;if(next!=='all')updateCreationTopic(next);if(remember)try{localStorage.setItem(TOPIC_KEY,topic)}catch(e){storageError()}try{$('#capture-text').value=localStorage.getItem(captureDraftKey())||''}catch(e){}resetDrag();render();if($('#completed-dialog').open)renderCompleted();window.dispatchEvent(new CustomEvent('zen-topic-change',{detail:{previous,current:topic}}))}
+$('#capture-topic').addEventListener('change',e=>updateCreationTopic(e.target.value));
+window.addEventListener('storage',e=>{if(e.key===TOPIC_KEY&&(e.newValue==='all'||Object.hasOwn(topicNames,e.newValue)))switchTopic(e.newValue,false);if(e.key===CREATE_TOPIC_KEY){creationTopic=normalizeTopic(e.newValue);$('#capture-topic').value=topics.defaultTopic();window.dispatchEvent(new Event('zen-creation-topic-change'))}});
+
+const fresh=()=>({version:1,drawers:[['P00','#596750'],['P0','#74816a'],['P1','#8e9884'],['P2','#a5ad9b'],['P3','#b7bdae']].map(([name,color])=>({id:uid(),name,color})),tags:[],tasks:[],done:[],theme:'light'});
+let attachmentDraft=[],fileDraft=new Map();
+const zenPalette=['#596750','#74816a','#8e9884','#a5ad9b','#b7bdae'];
+const oldPalette=['#bc715e','#c99b53','#8eab67','#79a59a','#a3a5a0'];
+function drawerColor(d,index){return oldPalette.includes(d.color.toLowerCase())||zenPalette.includes(d.color.toLowerCase())?zenPalette[Math.min(index,4)]:d.color}
+const completing=new Set();
+let expandedTask=null;
+let state=fresh(),history=[],dragId=null,dropBefore=null,editingId=null,drawerDraft=[],importDraft=null,toastTimer;
+function notice(msg){$('#toast').textContent=msg;$('#toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.remove('show'),2800)}
+function storageError(){const el=$('#storage-warning');el.style.display='block';el.textContent='浏览器未能保存数据；当前仍可使用，请点击「导出」保留你的需求。';$('#save-status').textContent='尚未保存，请导出备份'}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));$('#save-status').textContent='已在本机保存';$('#storage-warning').style.display='none'}catch(e){storageError()}}
+let filesDB;
+function openFilesDB(){
+ if(!filesDB)filesDB=new Promise((resolve,reject)=>{const request=indexedDB.open('zen-drawers-files',1);request.onupgradeneeded=()=>request.result.createObjectStore('files');request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error)}).catch(e=>{filesDB=null;throw e});
+ return filesDB;
+}
+async function storeFiles(entries){if(window.ZenFiles)return ZenFiles.store(entries);if(!entries.length)return;const db=await openFilesDB();await new Promise((resolve,reject)=>{const tx=db.transaction('files','readwrite');entries.forEach(([id,blob])=>tx.objectStore('files').put(blob,id));tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error||Error('文件保存中断'))})}
+async function readFile(id){if(window.ZenFiles)return ZenFiles.read(id);const db=await openFilesDB();return new Promise((resolve,reject)=>{const r=db.transaction('files').objectStore('files').get(id);r.onsuccess=()=>r.result?resolve(r.result):reject(Error('附件不存在，请从完整备份恢复'));r.onerror=()=>reject(r.error)})}
+function asDataURL(blob){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(reader.error);reader.readAsDataURL(blob)})}
+function dataBlob(a){const bytes=Uint8Array.from(atob(a.data.split(',')[1]),c=>c.charCodeAt(0));return new Blob([bytes],{type:a.mime||'application/octet-stream'})}
+function linkURL(value){let text=value.trim();if(!text)throw Error('请输入链接地址');if(/^[a-z][a-z0-9+.-]*:/i.test(text)&&!/^https?:/i.test(text))throw Error('链接仅支持 http 或 https');if(!/^https?:\/\//i.test(text))text='https://'+text;const url=new URL(text);if(!['http:','https:'].includes(url.protocol)||!url.hostname)throw Error('请输入有效网址');return url.href}
+function cleanAttachments(items){
+ if(items===undefined)return[];if(!Array.isArray(items))throw Error('附件数据有误');
+ return items.map(a=>{
+  if(!a||typeof a.id!=='string'||!a.id||typeof a.name!=='string'||!a.name.trim())throw Error('附件数据有误');
+  if(a.type==='link')return{id:a.id,type:'link',name:a.name,url:linkURL(a.url)};
+  if(a.type!=='file'||!Number.isSafeInteger(a.size)||a.size<0||typeof a.mime!=='string')throw Error('文件附件数据有误');
+  const result={id:a.id,type:'file',name:a.name,size:a.size,mime:a.mime};
+  if(a.data!==undefined){if(typeof a.data!=='string'||!/^data:[^,]*;base64,[A-Za-z0-9+/]*={0,2}$/.test(a.data))throw Error('文件附件内容有误');result.data=a.data}
+  return result;
+ });
+}
+async function downloadAttachment(a){try{const blob=await readFile(a.id),url=URL.createObjectURL(blob),link=make('a');link.href=url;link.download=a.name;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}catch(e){notice('无法下载：'+e.message)}}
+function attachmentRow(a,remove){
+ const row=make('div','attachment-row'),info=make('div','attachment-info'),link=make('a',null,a.name);
+ if(a.type==='link'){link.href=a.url;link.target='_blank';link.rel='noopener noreferrer';info.append(link,make('small',null,a.url))}
+ else{link.href='#';link.addEventListener('click',e=>{e.preventDefault();if(remove&&fileDraft.has(a.id)){const url=URL.createObjectURL(fileDraft.get(a.id)),tmp=make('a');tmp.href=url;tmp.download=a.name;tmp.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}else downloadAttachment(a)});info.append(link,make('small',null,a.size<1024?a.size+' B':a.size<1048576?(a.size/1024).toFixed(1)+' KB':(a.size/1048576).toFixed(1)+' MB'))}
+ row.append(make('span','muted',a.type==='link'?'↗':'↧'),info);
+ if(remove){const button=make('button','attachment-remove','×');button.type='button';button.setAttribute('aria-label','移除附件：'+a.name);button.addEventListener('click',()=>{attachmentDraft=attachmentDraft.filter(x=>x.id!==a.id);fileDraft.delete(a.id);renderAttachmentDraft()});row.append(button)}
+ return row;
+}
+function renderAttachmentDraft(){const list=$('#task-attachments');list.replaceChildren();if(!attachmentDraft.length)list.append(make('p','tiny muted','还没有附件或链接。'));else attachmentDraft.forEach(a=>list.append(attachmentRow(a,true)))}
+function addDraftLink(){try{const url=linkURL($('#link-url').value);attachmentDraft.push({id:uid(),type:'link',name:$('#link-name').value.trim()||new URL(url).hostname,url});$('#link-url').value='';$('#link-name').value='';$('#attachment-error').textContent='';renderAttachmentDraft()}catch(e){$('#attachment-error').textContent=e.message||'请输入有效网址'}}
+$('#choose-files').addEventListener('click',()=>{$('#task-files').value='';$('#task-files').click()});
+$('#task-files').addEventListener('change',e=>{for(const file of e.target.files){const id=uid();attachmentDraft.push({id,type:'file',name:file.name,size:file.size,mime:file.type});fileDraft.set(id,file)}renderAttachmentDraft()});
+$('#add-link').addEventListener('click',addDraftLink);
+['#link-name','#link-url'].forEach(selector=>$(selector).addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();addDraftLink()}}));
+async function saveAttachmentDraft(){if($('#link-url').value.trim()){const count=attachmentDraft.length;addDraftLink();if(count===attachmentDraft.length)throw Error($('#attachment-error').textContent)}await storeFiles([...fileDraft.entries()]);return copy(attachmentDraft)}
+function appendLinkedText(parent,text){
+ const pattern=/https?:\/\/[^\s<>"，。；！？（）]+/gi;let start=0;
+ for(const match of text.matchAll(pattern)){const url=match[0].replace(/[.,;!?)\]]+$/,'');parent.append(document.createTextNode(text.slice(start,match.index)));const a=make('a',null,url);a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.draggable=false;a.addEventListener('click',e=>e.stopPropagation());a.addEventListener('dblclick',e=>e.stopPropagation());parent.append(a);start=match.index+url.length}
+ parent.append(document.createTextNode(text.slice(start)));
+}
+function validate(raw){
+ if(!raw||raw.version!==1||!Array.isArray(raw.drawers)||!raw.drawers.length||!Array.isArray(raw.tasks)||!Array.isArray(raw.done))throw Error('不是有效的 Zen 抽屉备份');
+ const ids=new Set(['inbox','done','trash']);
+ const drawers=raw.drawers.map(d=>{if(!d||typeof d.id!=='string'||!d.id||ids.has(d.id)||typeof d.name!=='string'||!d.name.trim()||!/^#[0-9a-f]{6}$/i.test(d.color))throw Error('抽屉数据有误');ids.add(d.id);return{id:d.id,name:d.name.trim(),color:d.color}});
+ const tags=Array.isArray(raw.tags)?raw.tags.map(t=>{if(!t||typeof t.id!=='string'||!t.id||typeof t.name!=='string'||!t.name.trim()||!/^#[0-9a-f]{6}$/i.test(t.color))throw Error('标签数据有误');return{id:t.id,name:t.name.trim(),color:t.color}}):[];
+ const tagIds=new Set(tags.map(t=>t.id));if(tagIds.size!==tags.length||new Set(tags.map(t=>t.name)).size!==tags.length)throw Error('标签不能重复');
+ const taskLabels=t=>Array.isArray(t.tags)?[...new Set(t.tags.filter(id=>tagIds.has(id)))]:[];
+ const taskIds=new Set();
+ const check=(t,done)=>{if(!t||typeof t.id!=='string'||!t.id||taskIds.has(t.id)||typeof t.text!=='string'||!t.text.trim())throw Error('需求数据有误');taskIds.add(t.id);if(done){if(typeof t.completedAt!=='string'||!Number.isFinite(Date.parse(t.completedAt)))throw Error('完成日期有误');return{id:t.id,text:t.text,notes:typeof t.notes==='string'?t.notes:'',tags:taskLabels(t),completedAt:t.completedAt,topic:normalizeTopic(t.topic),urgent:t.urgent===true,urgentAt:ZenTime.normalize(t.urgentAt),attachments:cleanAttachments(t.attachments)}}if(!['inbox',...drawers.map(d=>d.id)].includes(t.zone))throw Error('需求所属抽屉不存在');return{id:t.id,text:t.text,notes:typeof t.notes==='string'?t.notes:'',tags:taskLabels(t),zone:t.zone,topic:normalizeTopic(t.topic),urgent:t.urgent===true,urgentAt:ZenTime.normalize(t.urgentAt),attachments:cleanAttachments(t.attachments)}};
+ return{version:1,drawers,tags,tasks:raw.tasks.map(t=>check(t,false)),done:raw.done.map(t=>check(t,true)),theme:raw.theme==='dark'?'dark':'light'};
+}
+try{const saved=localStorage.getItem(KEY);if(saved)state=validate(JSON.parse(saved));$('#capture-text').value=localStorage.getItem(captureDraftKey())||''}catch(e){$('#storage-warning').style.display='block';$('#storage-warning').textContent='本地数据暂时无法读取。请保留已有备份；你可以导入备份，或继续创建需求。';$('#save-status').textContent='本地数据未能读取'}
+function change(fn,message,update=render){history.push(copy(state));if(history.length>50)history.shift();fn();save();update();if(message)notice(message)}
+function make(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e}
+const taskTags=window.initZenTaskTags({$,make,uid,copy,getState:()=>state,change,openTask});
+function card(task){
+ const el=make('div','task has-delete');el.draggable=true;el.tabIndex=0;el.dataset.id=task.id;el.setAttribute('aria-label',task.text+'，双击或按回车编辑');
+ if(completing.has(task.id))el.classList.add('completing');
+ if(task.urgent)el.classList.add('is-urgent');
+ const title=make('span','task-text');ZenCards.title(title,task.text,appendLinkedText);el.append(make('span','grip','⠿'),title);el.querySelector('.grip').setAttribute('aria-hidden','true');
+ if(task.attachments?.length){const attachment=make('button','task-attachment');attachment.type='button';attachment.draggable=false;attachment.title='附件与链接（'+task.attachments.length+'）';attachment.setAttribute('aria-label','查看附件：'+task.text);attachment.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 12 6-6a3 3 0 0 1 4 4l-8 8a5 5 0 0 1-7-7l9-9a2 2 0 0 1 6 6l-9 9a1.5 1.5 0 0 1-2-2l8-8"/></svg>';attachment.append(make('span',null,String(task.attachments.length)));attachment.addEventListener('dblclick',e=>e.stopPropagation());attachment.addEventListener('click',e=>{e.stopPropagation();openTask(task.id);$('#task-attachments').focus()});el.append(attachment)}
+ if(topic==='all'&&normalizeTopic(task.topic)!=='work')el.append(make('span','topic-badge',topicNames[normalizeTopic(task.topic)]));
+ const labels=taskTags.badges(task);if(labels)el.append(labels);
+ const urgent=make('button','task-urgent');urgent.type='button';urgent.draggable=false;
+ urgent.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3 2 6m17-3 3 3M6 19l-2 2m14-2 2 2"/></svg>';
+ urgent.title=task.urgent?'取消加急':'加急';urgent.setAttribute('aria-label',(task.urgent?'取消加急：':'加急：')+task.text);urgent.setAttribute('aria-pressed',String(!!task.urgent));
+ urgent.addEventListener('pointerdown',e=>e.stopPropagation());urgent.addEventListener('dblclick',e=>e.stopPropagation());urgent.addEventListener('click',e=>{e.stopPropagation();toggleUrgent(task.id,el,urgent)});
+ el.append(urgent);renderTaskTime(el,task);
+ const finish=make('button','task-complete','✓');finish.type='button';finish.draggable=false;finish.title='完成';finish.setAttribute('aria-label','完成：'+task.text);
+ finish.addEventListener('pointerdown',e=>e.stopPropagation());
+ finish.addEventListener('dblclick',e=>e.stopPropagation());
+ finish.addEventListener('click',e=>{e.stopPropagation();animateComplete(task.id,el)});
+ const remove=make('button','task-delete','×');remove.type='button';remove.draggable=false;remove.title='删除';remove.setAttribute('aria-label','删除：'+task.text);
+ remove.addEventListener('pointerdown',e=>e.stopPropagation());remove.addEventListener('dblclick',e=>e.stopPropagation());remove.addEventListener('click',e=>{e.stopPropagation();deleteTask(task.id)});
+ el.append(finish,remove);
+ el.addEventListener('dblclick',()=>openTask(task.id));el.addEventListener('keydown',e=>{if(e.target===el&&e.key==='Enter'){e.preventDefault();openTask(task.id)}});return el
+}
+function animateCardLayout(update){
+ const cards=$$('.zone-content .task');
+ const before=new Map(cards.map(el=>[el,{rect:el.getBoundingClientRect(),width:parseFloat(getComputedStyle(el,'::before').width)}]));
+ cards.forEach(el=>el.getAnimations().forEach(a=>a.cancel()));
+ update();
+ ZenCards.layout();
+ if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ const timing={duration:400,easing:'cubic-bezier(.22,.61,.36,1)'};
+ cards.forEach(el=>{
+  const old=before.get(el),rect=el.getBoundingClientRect(),surfaceWidth=parseFloat(getComputedStyle(el,'::before').width),dx=old.rect.left-rect.left,dy=old.rect.top-rect.top;
+  if(Math.abs(dx)>.1||Math.abs(dy)>.1)el.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:'translate(0,0)'}],timing);
+  if(Math.abs(old.width-surfaceWidth)>.1)el.animate([{width:old.width+'px'},{width:surfaceWidth+'px'}],{...timing,pseudoElement:'::before'});
+ });
+}
+function expandTask(next){
+ if(next===expandedTask)return;
+ ZenCards.releaseActions(expandedTask,next);
+ animateCardLayout(()=>{$$('.zone-content .task').forEach(el=>el.classList.toggle('expanded',el===next));expandedTask=next});
+}
+function renderTaskTime(el,task){el.querySelector('.urgent-time')?.remove();if(!task.urgent)return;el.insertBefore(ZenTime.badge(task,()=>ZenTime.open({title:task.text,value:task.urgentAt,onSave:date=>{change(()=>{const current=state.tasks.find(t=>t.id===task.id);if(!current)throw Error('需求已在另一窗口移除');current.urgent=true;current.urgentAt=date},'加急时间已保存')}})),el.querySelector('.task-urgent'))}
+function toggleUrgent(id,el,button){
+ const task=state.tasks.find(t=>t.id===id);if(!task||completing.has(id))return;
+ change(()=>{task.urgent=!task.urgent;if(!task.urgent)task.urgentAt=null},undefined,()=>{
+  animateCardLayout(()=>{
+   el.classList.toggle('is-urgent',task.urgent);renderTaskTime(el,task);button.title=task.urgent?'取消加急':'加急';
+   button.setAttribute('aria-label',(task.urgent?'取消加急：':'加急：')+task.text);button.setAttribute('aria-pressed',String(task.urgent));
+  });
+  $('#undo').disabled=!history.length;
+ });
+}
+document.addEventListener('pointermove',e=>{
+ if(e.pointerType==='touch'||dragId||completing.size)return;
+ const next=e.target.closest('.zone-content .task');
+ if(next?.classList.contains('completing'))return;
+ expandTask(next);
+});
+document.addEventListener('focusin',e=>{const next=e.target.closest('.zone-content .task');if(next)expandTask(next)});
+document.addEventListener('focusout',e=>{if(e.target.closest('.task')&&!e.relatedTarget?.closest('.task'))expandTask(null)});
+async function animateComplete(id,el){
+ if(completing.has(id)||!state.tasks.some(t=>t.id===id))return;
+ completing.add(id);
+ const rect=el.getBoundingClientRect(),pieces=[];
+ if(!matchMedia('(prefers-reduced-motion: reduce)').matches){
+  const background=getComputedStyle(el,'::before').backgroundColor;
+  for(const top of [true,false]){
+   const piece=el.cloneNode(true);piece.className='task completion-piece'+(el.classList.contains('expanded')?' expanded':'')+(el.classList.contains('is-urgent')?' is-urgent':'');piece.removeAttribute('tabindex');piece.removeAttribute('data-id');piece.setAttribute('aria-hidden','true');piece.inert=true;piece.draggable=false;
+   Object.assign(piece.style,{left:rect.left+'px',top:rect.top+'px',width:rect.width+'px',height:rect.height+'px',background,clipPath:top?'polygon(0 0,100% 0,100% 38%,0 62%)':'polygon(0 62%,100% 38%,100% 100%,0 100%)'});
+   document.body.append(piece);pieces.push(piece);
+  }
+ }
+ el.classList.add('completing');el.draggable=false;
+ try{
+  await Promise.allSettled(pieces.map((piece,i)=>piece.animate([
+   {transform:'translate(0,0) rotate(0deg)',opacity:1},
+   {transform:i===0?'translate(6px,-3px) rotate(-1deg)':'translate(-6px,3px) rotate(1deg)',opacity:1,offset:.28},
+   {transform:i===0?'translate(28px,-15px) rotate(-5deg)':'translate(-28px,17px) rotate(5deg)',opacity:0}
+  ],{duration:340,easing:'cubic-bezier(.22,.61,.36,1)',fill:'forwards'}).finished));
+ }finally{
+  pieces.forEach(p=>p.remove());completing.delete(id);
+  if(state.tasks.some(t=>t.id===id))completeTask(id);
+ }
+}
+
+function fill(zone,tasks,empty){const content=zone.querySelector('.zone-content');content.replaceChildren();if(tasks.length)tasks.forEach(t=>content.append(card(t)));else content.append(make('p','empty',empty));ZenCards.watch(content)}
+function render(){
+ taskTags.render();
+ document.body.classList.toggle('dark',state.theme==='dark');$('#theme').setAttribute('aria-pressed',String(state.theme==='dark'));
+ drawTopicTabs($('#drawer-topics'));$('#capture-topic-field').hidden=topic!=='all';$('#capture-topic').value=topics.defaultTopic();
+ const visibleTasks=state.tasks.filter(topics.matches),visibleDone=state.done.filter(topics.matches);
+ const inbox=visibleTasks.filter(t=>t.zone==='inbox');$('#inbox-count').textContent=inbox.length+' 项';$('#active-count').textContent='· '+visibleTasks.length+' 项待处理';$('#done-count').textContent=visibleDone.length;$('#undo').disabled=!history.length;
+ fill($('#inbox'),inbox,'此刻留白，随时添入。');
+ const board=$('#drawers');board.replaceChildren();board.style.setProperty('--drawer-count',state.drawers.length);
+ state.drawers.forEach((d,index)=>{const tasks=visibleTasks.filter(t=>t.zone===d.id);const zone=make('section','drawer dropzone');zone.dataset.zone=d.id;zone.setAttribute('aria-label',d.name+' 抽屉');zone.style.setProperty('--drawer-color',drawerColor(d,index));const strength=state.drawers.length===1?1:1-index/(state.drawers.length-1);for(const [key,value] of Object.entries({'--priority-tint':(1+6*strength)+'%','--priority-label-tint':(5+21*strength)+'%','--priority-border':(14+48*strength)+'%','--priority-ink':(3+32*strength)+'%','--priority-stripe':(1+1.5*strength)+'px','--priority-font':(18+7*strength)+'px','--priority-weight':Math.round(400+200*strength),'--priority-count-opacity':.7+.3*strength}))zone.style.setProperty(key,value);const label=make('div','drawer-label');label.append(make('h2','drawer-name',d.name),make('span','drawer-count',tasks.length+' 项'));zone.append(label,make('div','zone-content'));fill(zone,tasks,'拖到这里');zone.addEventListener('dblclick',e=>{if(e.target.closest('.task'))return;openTask(null,d.id)});board.append(zone)});
+}
+function addCandidates(e){e.preventDefault();const text=$('#capture-text');const lines=text.value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);if(!lines.length){text.focus();return}change(()=>lines.forEach(line=>state.tasks.push({id:uid(),text:line,zone:'inbox',topic:topics.defaultTopic(),tags:taskTags.capture()})),'已添加 '+lines.length+' 项候选');text.value='';try{localStorage.removeItem(captureDraftKey())}catch(e){}text.focus()}
+$('#capture').addEventListener('submit',addCandidates);
+$('#capture-text').addEventListener('input',()=>{try{localStorage.setItem(captureDraftKey(),$('#capture-text').value)}catch(e){storageError()}});
+$('#capture-text').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing&&(e.metaKey||e.ctrlKey))addCandidates(e)});
+function undo(){if(!history.length)return;state=history.pop();save();render();if($('#completed-dialog').open)renderCompleted();notice('已撤销')}
+$('#undo').addEventListener('click',undo);
+document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='z'&&!e.shiftKey&&!e.target.closest('textarea,input,[contenteditable]')&&!$('dialog[open]')&&location.hash!=='#qa'){e.preventDefault();undo()}});
+$('#theme').addEventListener('click',()=>{state.theme=state.theme==='dark'?'light':'dark';save();render()});
+function resetDrag(){document.body.classList.remove('is-dragging');dragId=null;dropBefore=null;$$('.over,.before,.after,.dragging').forEach(el=>el.classList.remove('over','before','after','dragging'))}
+document.addEventListener('dragstart',e=>{const el=e.target.closest('.task');if(!el)return;if(e.target.closest('button,a')||completing.has(el.dataset.id)){e.preventDefault();return}dragId=el.dataset.id;document.body.classList.add('is-dragging');e.dataTransfer.setData('text/plain',dragId);e.dataTransfer.effectAllowed='move';requestAnimationFrame(()=>el.isConnected&&el.classList.add('dragging'))});
+document.addEventListener('dragover',e=>{
+ const zone=e.target.closest('.dropzone');if(!dragId||!zone)return;e.preventDefault();e.dataTransfer.dropEffect='move';$$('.over,.before,.after').forEach(el=>el.classList.remove('over','before','after'));zone.classList.add('over');dropBefore=null;
+ const target=e.target.closest('.task');if(target&&target.dataset.id!==dragId){const r=target.getBoundingClientRect();const vertical=zone.dataset.zone==='inbox'&&window.innerWidth>600;const before=vertical?e.clientY<r.y+r.height/2:e.clientX<r.x+r.width/2;target.classList.add(before?'before':'after');const siblings=Array.from(zone.querySelectorAll('.task')).filter(c=>c.dataset.id!==dragId);dropBefore=before?target.dataset.id:siblings[siblings.indexOf(target)+1]?.dataset.id||null}
+});
+document.addEventListener('dragleave',e=>{const zone=e.target.closest('.dropzone');if(zone&&!zone.contains(e.relatedTarget)){zone.classList.remove('over');zone.querySelectorAll('.before,.after').forEach(x=>x.classList.remove('before','after'))}});
+document.addEventListener('drop',e=>{const zone=e.target.closest('.dropzone');if(!dragId||!zone)return;e.preventDefault();const id=dragId,before=dropBefore,destination=zone.dataset.zone;resetDrag();if(!state.tasks.some(t=>t.id===id))return;if(destination==='trash')deleteTask(id);else moveTask(id,destination,before)});
+document.addEventListener('dragend',resetDrag);
+function moveTask(id,zone,before){change(()=>{const i=state.tasks.findIndex(t=>t.id===id);const task=state.tasks.splice(i,1)[0];task.zone=zone;const next=before?state.tasks.findIndex(t=>t.id===before):-1;state.tasks.splice(next<0?state.tasks.length:next,0,task)})}
+function completeTask(id){change(()=>{const t=state.tasks.find(t=>t.id===id);if(!t)return;state.done.unshift({id:t.id,text:t.text,notes:t.notes||'',tags:copy(t.tags||[]),completedAt:new Date().toISOString(),topic:normalizeTopic(t.topic),urgent:!!t.urgent,urgentAt:ZenTime.normalize(t.urgentAt),attachments:copy(t.attachments||[])});state.tasks=state.tasks.filter(t=>t.id!==id)},'已完成，可在「已完成」中恢复')}
+function deleteTask(id){change(()=>{state.tasks=state.tasks.filter(t=>t.id!==id)},'已删除，可撤销')}
+function openTask(id,zone='inbox'){
+ editingId=id;taskTags.begin(state.tasks.find(t=>t.id===id)?.tags||[]);$('#task-text').setCustomValidity('');const task=state.tasks.find(t=>t.id===id);attachmentDraft=copy(task?.attachments||[]);fileDraft=new Map();$('#link-name').value='';$('#link-url').value='';$('#attachment-error').textContent='';renderAttachmentDraft();$('#task-dialog-title').textContent=task?'编辑需求':'添加需求';$('#task-text').value=task?.text||'';$('#task-notes').value=task?.notes||'';$('#task-topic').value=task?normalizeTopic(task.topic):topics.defaultTopic();const select=$('#task-zone');select.replaceChildren();[['inbox','候选 · 未分配'],...state.drawers.map(d=>[d.id,d.name])].forEach(([id,name])=>{const op=make('option',null,name);op.value=id;select.append(op)});select.value=task?.zone||zone;$('#delete-task').hidden=!task;$('#finish-task').hidden=!task;$('#task-dialog').showModal();sizeTaskTitle();$('#task-text').focus()
+}
+async function commitTask(finish=false){
+ let notes=$('#task-notes').value;const text=$('#task-text').value.trim(),zone=$('#task-zone').value,taskTopic=$('#task-topic').value;
+ if(!text){$('#task-text').setCustomValidity('请输入需求内容');$('#task-text').reportValidity();return}
+ const form=$('#task-form');form.inert=true;
+ try{
+  notes=await taskRecord.normalize();
+  const attachments=await saveAttachmentDraft(),tags=taskTags.selected();
+  change(()=>{const t=state.tasks.find(t=>t.id===editingId);if(finish&&t){state.done.unshift({id:t.id,text,notes,tags,completedAt:new Date().toISOString(),topic:taskTopic,urgent:!!t.urgent,urgentAt:ZenTime.normalize(t.urgentAt),attachments});state.tasks=state.tasks.filter(x=>x.id!==t.id)}else if(t){t.text=text;t.notes=notes;t.tags=tags;t.zone=zone;t.topic=taskTopic;t.attachments=attachments}else state.tasks.push({id:uid(),text,notes,tags,zone,topic:taskTopic,attachments})},finish?'已完成':undefined);
+  $('#task-dialog').close();
+ }catch(e){$('#attachment-error').textContent='保存失败：'+e.message}finally{form.inert=false}
+}
+$('#task-form').addEventListener('submit',e=>{e.preventDefault();commitTask()});
+function sizeTaskTitle(){const el=$('#task-text');el.style.height='0px';el.style.height=Math.min(96,Math.max(40,el.scrollHeight+2))+'px'}
+$('#task-text').addEventListener('input',()=>{$('#task-text').setCustomValidity('');sizeTaskTitle()});
+$('#delete-task').addEventListener('click',()=>{deleteTask(editingId);$('#task-dialog').close()});
+$('#finish-task').addEventListener('click',()=>commitTask(true));
+$$('[data-close]').forEach(b=>b.addEventListener('click',()=>b.closest('dialog').close()));
+$$('dialog').forEach(d=>d.addEventListener('click',e=>{const r=d.getBoundingClientRect();if(e.target===d&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom))d.close()}));
+$('#settings').addEventListener('click',()=>{drawerDraft=copy(state.drawers).map((d,index)=>({...d,color:drawerColor(d,index)}));$('#settings-error').textContent='';renderDrawerEditor();$('#settings-dialog').showModal()});
+function renderDrawerEditor(){const list=$('#drawer-editor');list.replaceChildren();drawerDraft.forEach((d,i)=>{const row=make('div','drawer-edit-row'),color=make('input'),name=make('input');color.type='color';color.value=d.color;color.setAttribute('aria-label','抽屉颜色 '+(i+1));color.addEventListener('input',()=>d.color=color.value);name.type='text';name.value=d.name;name.required=true;name.placeholder='抽屉名称';name.setAttribute('aria-label','抽屉名称 '+(i+1));name.addEventListener('input',()=>d.name=name.value);row.append(color,name);[['↑','向上移动',-1],['↓','向下移动',1],['×','移除抽屉',0]].forEach(([text,label,dir])=>{const b=make('button',null,text);b.type='button';b.setAttribute('aria-label',label+' '+(i+1));b.disabled=dir===-1?i===0:dir===1?i===drawerDraft.length-1:drawerDraft.length===1;b.addEventListener('click',()=>{if(dir){[drawerDraft[i],drawerDraft[i+dir]]=[drawerDraft[i+dir],drawerDraft[i]]}else drawerDraft.splice(i,1);renderDrawerEditor()});row.append(b)});list.append(row)})}
+$('#add-drawer').addEventListener('click',()=>{drawerDraft.push({id:uid(),name:'新抽屉',color:'#8eab67'});renderDrawerEditor();const inputs=$$('#drawer-editor input[type=text]');inputs.at(-1).focus();inputs.at(-1).select()});
+$('#settings-form').addEventListener('submit',e=>{e.preventDefault();if(drawerDraft.some(d=>!d.name.trim())){$('#settings-error').textContent='请给每个抽屉填写名称。';return}change(()=>{state.drawers=drawerDraft.map(d=>({...d,name:d.name.trim()}));const ids=state.drawers.map(d=>d.id);state.tasks.forEach(t=>{if(t.zone!=='inbox'&&!ids.includes(t.zone))t.zone='inbox'})},'设置已保存');ZenAppearance.commit();$('#settings-dialog').close()});
+function linkedCompletedTitle(text){const el=make('div','name');appendLinkedText(el,text);return el}
+function renderCompleted(){const list=$('#completed-list');list.replaceChildren();const completed=state.done.filter(topics.matches);if(!completed.length){list.append(make('p','muted','还没有已完成的需求。完成一件，再轻松一点。'));return}completed.forEach(t=>{const row=make('div','completed-row'),info=make('div','completed-info');info.append(linkedCompletedTitle(t.text),make('div','muted tiny',(topic==='all'?topicNames[normalizeTopic(t.topic)]+' · ':'')+new Date(t.completedAt).toLocaleString('zh-CN')));const labels=taskTags.badges(t);if(labels){labels.querySelectorAll('button').forEach(b=>{b.disabled=true});info.append(labels)}if(t.notes){const notes=make('div','completed-notes');notes.append(make('span','tiny muted','记录'),make('div','completed-notes-text qa-markdown'));taskRecord.preview(t.notes,notes.lastElementChild);info.append(notes)}if(t.attachments?.length)t.attachments.forEach(a=>info.append(attachmentRow(a,false)));const restore=make('button',null,'恢复');restore.addEventListener('click',()=>{change(()=>{state.done=state.done.filter(x=>x.id!==t.id);state.tasks.push({id:t.id,text:t.text,notes:t.notes||'',tags:copy(t.tags||[]),zone:'inbox',topic:normalizeTopic(t.topic),urgent:!!t.urgent,urgentAt:ZenTime.normalize(t.urgentAt),attachments:copy(t.attachments||[])})},'已恢复到候选区');renderCompleted()});row.append(info,restore);list.append(row)})}
+$('#completed').addEventListener('click',()=>{renderCompleted();$('#completed-dialog').showModal()});
+$('#export').addEventListener('click',async()=>{try{const backup=copy(state);for(const task of [...backup.tasks,...backup.done])for(const a of task.attachments||[])if(a.type==='file')a.data=await asDataURL(await readFile(a.id));const data=JSON.stringify(backup,null,2),url=URL.createObjectURL(new Blob([data],{type:'application/json'})),link=make('a');const now=new Date(),date=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');link.href=url;link.download='Zen抽屉-'+date+'.json';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);notice('已导出备份（含附件）')}catch(e){notice('导出失败：'+e.message)}});
+$('#import').addEventListener('click',()=>{$('#import-file').value='';$('#import-file').click()});
+$('#import-file').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;try{importDraft=validate(JSON.parse(await file.text()));$('#import-summary').textContent=file.name+'\n'+importDraft.drawers.length+' 个抽屉 · '+importDraft.tasks.length+' 项待处理 · '+importDraft.done.length+' 项已完成';$('#import-dialog').showModal()}catch(err){notice('导入失败：'+(err instanceof SyntaxError?'文件不是有效 JSON':err.message))}});
+$('#confirm-import').addEventListener('click',async()=>{
+ if(!importDraft)return;const button=$('#confirm-import');button.disabled=true;
+ try{const entries=[];for(const t of [...importDraft.tasks,...importDraft.done])for(const a of t.attachments||[])if(a.type==='file'){if(!a.data)throw Error('备份缺少文件内容：'+a.name);const blob=dataBlob(a);if(blob.size!==a.size)throw Error('文件内容不完整：'+a.name);entries.push([a.id,blob]);delete a.data}await storeFiles(entries);change(()=>state=importDraft,'备份已导入');importDraft=null;$('#import-dialog').close()}catch(e){notice('导入失败：'+e.message);importDraft=null;$('#import-dialog').close()}finally{button.disabled=false}
+});
+window.addEventListener('storage',e=>{if(e.key!==KEY||!e.newValue)return;try{state=validate(JSON.parse(e.newValue));history=[];render();if($('#completed-dialog').open)renderCompleted();$('#save-status').textContent='已同步本机数据'}catch(error){notice('另一窗口的数据未能读取，请导出备份')}});
+render();
+const taskRecord=window.initZenTaskRecord({storeFiles,readFile,uid,attachments:()=>attachmentDraft,renderAttachments:renderAttachmentDraft,notice});
+window.initZenQA({$, $$,uid,copy,make,notice,storeFiles,readFile,asDataURL,dataBlob,animateCardLayout,topics});
+})();
+</script>
+</body>
+</html>

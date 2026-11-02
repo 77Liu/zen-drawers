@@ -1,0 +1,10 @@
+.DS_Store
+work/
+dist/
+macOS/legacy/
+macOS/install-local-service.py
+macOS/local_server.py
+Zen记录备份-*.json
+打开 Zen抽屉
+设计预览.png
+AGENTS.md
