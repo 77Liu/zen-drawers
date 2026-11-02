@@ -2,7 +2,7 @@
 # Update the fixed App path so existing Dock and Finder shortcuts keep working.
 set -euo pipefail
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-VERSION="${1:-3.0.3}"
+VERSION="${1:-3.0.4}"
 TARGET="/Applications/Zen 抽屉.app"
 ARCHIVE="$PROJECT_DIR/dist/Zen抽屉-$VERSION-macOS-universal.zip"
 if pgrep -x ZenDrawers >/dev/null; then

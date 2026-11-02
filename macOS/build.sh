@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-VERSION="${1:-3.0.3}"
+VERSION="${1:-3.0.4}"
 DIST="$PROJECT_DIR/dist"
 BUILD="$PROJECT_DIR/work/native-build"
 APP="$DIST/Zen 抽屉.app"
@@ -23,6 +23,7 @@ if web.exists(): shutil.rmtree(web)
 web.mkdir()
 for name in ['Zen抽屉.html','manifest.webmanifest','zen-sw.js']: shutil.copy2(root/name,web/name)
 shutil.copytree(root/'assets',web/'assets')
+shutil.copy2(root/'LICENSE',app/'Contents/Resources/LICENSE')
 info=dict(CFBundleExecutable='ZenDrawers',CFBundleIdentifier='local.zen.drawers',CFBundleName='Zen 抽屉',CFBundleDisplayName='Zen 抽屉',CFBundleIconFile='Zen.icns',CFBundlePackageType='APPL',CFBundleShortVersionString=version,CFBundleVersion=version,LSMinimumSystemVersion='13.1',NSHighResolutionCapable=True,NSPrincipalClass='NSApplication',NSHumanReadableCopyright='Planning Zen / EasyMDE / DOMPurify licenses are retained in Resources/web.')
 (app/'Contents/Info.plist').write_bytes(plistlib.dumps(info))
 PY
@@ -55,7 +56,10 @@ if [[ -n "${ZEN_NOTARY_PROFILE:-}" ]]; then
  xcrun stapler staple "$DMG"
 fi
 ditto -c -k --sequesterRsrc --keepParent "$APP" "$DIST/Zen抽屉-$VERSION-macOS-universal.zip"
-shasum -a 256 "$DMG" > "$DMG.sha256"
+python3 - "$DMG" <<'PYHASH'
+import hashlib,pathlib,sys
+p=pathlib.Path(sys.argv[1]);p.with_suffix(p.suffix+'.sha256').write_text(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name+'\n')
+PYHASH
 # Keep only compressed deliverables so Spotlight lists the installed app once.
 rm -rf "$STAGE" "$APP" "$ICONSET"
 printf '%s\n' "Built: $DMG" "Data remains in ~/.zen; no user records were packaged."

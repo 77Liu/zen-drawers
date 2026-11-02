@@ -88,8 +88,8 @@ header {display:flex;align-items:center;justify-content:space-between;gap:20px;f
 .toolbar {display:flex;flex-wrap:wrap;align-items:center;gap:5px}
 .toolbar button {font-size:calc(11px * var(--font-scale,1));letter-spacing:.03em;padding:5px 10px;border-color:transparent;color:var(--muted);border-radius:2px}
 .toolbar button:hover {color:var(--text);border-color:var(--line)}
-#undo {font-size:calc(15px * var(--font-scale,1));padding:1px 9px;line-height:26px}
-#completed {margin-right:9px;border-right:1px solid var(--line);border-radius:0;padding-right:19px}
+:is(#undo,#qa-undo) {font-size:calc(15px * var(--font-scale,1));padding:1px 9px;line-height:26px}
+:is(#completed,#qa-history) {margin-right:9px;border-right:1px solid var(--line);border-radius:0;padding-right:19px}
 #done-count {margin-left:5px;font-variant-numeric:tabular-nums}
 #theme {font-size:calc(17px * var(--font-scale,1));line-height:22px;margin-left:4px;padding:3px 8px}
 .layout {display:grid;grid-template-columns:252px minmax(0,1fr);gap:40px;flex:1;min-height:0;align-items:stretch;overflow:hidden}
@@ -239,7 +239,7 @@ dialog::backdrop {background:var(--overlay);backdrop-filter:blur(5px)}
 @media(max-width:600px) {
  html,body {height:auto;overflow:auto}.app {height:auto;overflow:visible;padding:24px 20px 16px}
  header {align-items:flex-start;flex-direction:column;gap:18px;padding-bottom:17px;margin-bottom:24px}h1 {font-size:calc(28px * var(--font-scale,1))}
- .toolbar {gap:1px}.toolbar button {padding-left:6px;padding-right:6px}#completed {padding-right:12px;margin-right:4px}
+ .toolbar {gap:1px}.toolbar button {padding-left:6px;padding-right:6px}:is(#completed,#qa-history) {padding-right:12px;margin-right:4px}
  .layout {display:block;overflow:visible}.candidate {padding:0;border-right:0;margin-bottom:30px}
  .capture textarea {height:110px;max-height:none}.candidate-zone {min-height:95px;max-height:260px;padding-top:14px}
  .candidate-zone .zone-content {flex-direction:row;flex-wrap:wrap}.candidate-zone .empty {padding:13px 0}
@@ -253,26 +253,26 @@ dialog::backdrop {background:var(--overlay);backdrop-filter:blur(5px)}
 
 
 /* Compact task editor, with notes immediately above the existing attachment block. */
-#task-dialog{max-height:90dvh}
-#task-dialog .dialog-head{padding:15px 20px 12px}
-#task-dialog .dialog-head h2{font-size:calc(20px * var(--font-scale,1))}
-#task-dialog .dialog-body{padding:15px 20px;max-height:calc(90dvh - 116px)}
-#task-dialog .field{gap:5px;margin-bottom:12px}
-#task-dialog input,#task-dialog select{padding:7px 9px;font-size:calc(12px * var(--font-scale,1))}
-#task-dialog #task-text{height:40px;min-height:40px;max-height:96px;resize:none;padding:8px 10px;line-height:1.7;font-size:calc(13px * var(--font-scale,1))}
+.task-editor{max-height:90dvh}
+.task-editor .dialog-head{padding:15px 20px 12px}
+.task-editor .dialog-head h2{font-size:calc(20px * var(--font-scale,1))}
+.task-editor .dialog-body{padding:15px 20px;max-height:calc(90dvh - 116px)}
+.task-editor .field{gap:5px;margin-bottom:12px}
+.task-editor input,.task-editor select{padding:7px 9px;font-size:calc(12px * var(--font-scale,1))}
+.task-editor :is(#task-text,#qa-edit-title){height:40px;min-height:40px;max-height:96px;resize:none;padding:8px 10px;line-height:1.7;font-size:calc(13px * var(--font-scale,1))}
 .task-metadata{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-#task-dialog .task-metadata .field{min-width:0;margin-bottom:12px}
-#task-notes{width:100%;height:96px;min-height:80px;padding:9px 10px;font-size:calc(12px * var(--font-scale,1));line-height:1.9;resize:vertical}
-#task-dialog .attachment-section{margin-top:13px;padding-top:12px}
-#task-dialog .attachment-heading{margin-bottom:7px}
-#task-dialog .link-entry{margin-top:9px}
-#task-dialog .attachment-hint{margin-top:7px}
-#task-dialog .dialog-foot{padding:11px 20px;gap:8px}
-#task-dialog .dialog-foot button{font-size:calc(12px * var(--font-scale,1));padding:6px 11px}
+.task-editor .task-metadata .field{min-width:0;margin-bottom:12px}
+.task-editor .editor-notes{width:100%;height:96px;min-height:80px;padding:9px 10px;font-size:calc(12px * var(--font-scale,1));line-height:1.9;resize:vertical}
+.task-editor .attachment-section{margin-top:13px;padding-top:12px}
+.task-editor .attachment-heading{margin-bottom:7px}
+.task-editor .link-entry{margin-top:9px}
+.task-editor .attachment-hint{margin-top:7px}
+.task-editor .dialog-foot{padding:11px 20px;gap:8px}
+.task-editor .dialog-foot button{font-size:calc(12px * var(--font-scale,1));padding:6px 11px}
 .completed-notes{margin-top:9px;padding-left:10px;border-left:1px solid var(--line);font-size:calc(12px * var(--font-scale,1))}
 .completed-notes-text{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:3px}
 .completed-notes-text a{color:var(--green);text-underline-offset:3px}
-@media(max-width:600px){#task-dialog .dialog-head,#task-dialog .dialog-body,#task-dialog .dialog-foot{padding-left:16px;padding-right:16px}.task-metadata{gap:10px}#task-dialog .dialog-foot{gap:6px}#task-dialog .dialog-foot button{padding-left:9px;padding-right:9px}}
+@media(max-width:600px){.task-editor .dialog-head,.task-editor .dialog-body,.task-editor .dialog-foot{padding-left:16px;padding-right:16px}.task-metadata{gap:10px}.task-editor .dialog-foot{gap:6px}.task-editor .dialog-foot button{padding-left:9px;padding-right:9px}}
 
 </style>
 <link rel="stylesheet" href="assets/zen-qa.css">
@@ -301,7 +301,7 @@ dialog::backdrop {background:var(--overlay);backdrop-filter:blur(5px)}
 </main>
 <footer><span>本机保存 · 同一浏览器打开 · 定期导出备份</span><span><a href="https://github.com/f3d0rov/planning-zen" target="_blank" rel="noopener">Planning Zen</a> · MIT</span></footer>
 </div>
-<dialog id="task-dialog" aria-labelledby="task-dialog-title"><form id="task-form"><div class="dialog-head"><h2 id="task-dialog-title">编辑需求</h2><button type="button" class="close" data-close aria-label="关闭">×</button></div><div class="dialog-body"><label class="field"><span>需求内容</span><textarea id="task-text" rows="1" required></textarea></label><div class="task-metadata"><label class="field"><span>课题</span><select id="task-topic"><option value="work">工作</option><option value="study">学习</option><option value="life">生活</option></select></label><label class="field"><span>放入抽屉</span><select id="task-zone"></select></label></div><label class="field task-notes-field"><span>记录</span><textarea id="task-notes" rows="4" placeholder="记下进展、想法或下一步…"></textarea></label><section class="attachment-section" aria-label="附件与链接"><div class="attachment-heading"><span>附件与链接</span><button type="button" id="choose-files">＋ 添加文件</button></div><input type="file" id="task-files" multiple hidden><div id="task-attachments" tabindex="-1"></div><div class="link-entry"><input id="link-name" aria-label="链接名称" placeholder="链接名称（可选）"><input id="link-url" aria-label="链接地址" placeholder="https://…" inputmode="url"><button type="button" id="add-link">添加链接</button></div><p id="attachment-error" class="error" role="alert"></p><p class="tiny muted attachment-hint">文件保存在当前浏览器，随导出备份一同保存。需求文字中的网址也可以直接点击。</p></section></div><div class="dialog-foot"><button type="button" class="danger" id="delete-task">删除</button><button type="button" id="finish-task">✓ 完成</button><span class="spacer"></span><button type="button" data-close>取消</button><button type="submit" class="primary">保存</button></div></form></dialog>
+<dialog class="task-editor" id="task-dialog" aria-labelledby="task-dialog-title"><form id="task-form"><div class="dialog-head"><h2 id="task-dialog-title">编辑需求</h2><button type="button" class="close" data-close aria-label="关闭">×</button></div><div class="dialog-body"><label class="field"><span>需求内容</span><textarea class="editor-title" id="task-text" rows="1" required></textarea></label><div class="task-metadata"><label class="field"><span>课题</span><select id="task-topic"><option value="work">工作</option><option value="study">学习</option><option value="life">生活</option></select></label><label class="field"><span>放入抽屉</span><select id="task-zone"></select></label></div><label class="field task-notes-field"><span>记录</span><textarea class="editor-notes" id="task-notes" rows="4" placeholder="记下进展、想法或下一步…"></textarea></label><section class="attachment-section" aria-label="附件与链接"><div class="attachment-heading"><span>附件与链接</span><button type="button" id="choose-files">＋ 添加文件</button></div><input type="file" id="task-files" multiple hidden><div id="task-attachments" tabindex="-1"></div><div class="link-entry"><input id="link-name" aria-label="链接名称" placeholder="链接名称（可选）"><input id="link-url" aria-label="链接地址" placeholder="https://…" inputmode="url"><button type="button" id="add-link">添加链接</button></div><p id="attachment-error" class="error" role="alert"></p><p class="tiny muted attachment-hint">文件保存在当前浏览器，随导出备份一同保存。需求文字中的网址也可以直接点击。</p></section></div><div class="dialog-foot"><button type="button" class="danger" id="delete-task">删除</button><button type="button" id="finish-task">✓ 完成</button><span class="spacer"></span><button type="button" data-close>取消</button><button type="submit" class="primary">保存</button></div></form></dialog>
 <dialog id="settings-dialog" aria-labelledby="settings-title"><form id="settings-form"><div class="dialog-head"><h2 id="settings-title">自定义抽屉</h2><button type="button" class="close" data-close aria-label="关闭">×</button></div><div class="dialog-body"><p class="muted tiny">改名字、颜色和顺序，让抽屉适合你的工作方式。</p><div id="drawer-editor"></div><button type="button" id="add-drawer">＋ 添加抽屉</button><p class="muted tiny" style="margin-top:13px">移除抽屉后，其中的需求会回到「候选 · 未分配」。</p><p id="settings-error" class="error" role="alert"></p></div><div class="dialog-foot"><button type="button" data-close>取消</button><button type="submit" class="primary">保存设置</button></div></form></dialog>
 <dialog id="completed-dialog" aria-labelledby="completed-title"><div class="dialog-head"><h2 id="completed-title">已完成</h2><button type="button" class="close" data-close aria-label="关闭">×</button></div><div class="dialog-body" id="completed-list"></div><div class="dialog-foot"><span class="muted tiny" style="margin-right:auto">恢复后会回到未分配候选。</span><button data-close>关闭</button></div></dialog>
 <dialog id="import-dialog" aria-labelledby="import-title"><div class="dialog-head"><h2 id="import-title">导入备份</h2><button type="button" class="close" data-close aria-label="关闭">×</button></div><div class="dialog-body"><p>导入会替换全部课题的抽屉和需求，可以通过「撤销」恢复。</p><p id="import-summary" class="import-summary muted"></p></div><div class="dialog-foot"><button data-close>取消</button><button class="primary" id="confirm-import">导入并替换</button></div></dialog>
